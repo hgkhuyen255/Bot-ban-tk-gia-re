@@ -65,77 +65,82 @@ COUPONS_FILE = "coupons.json"
 # CATALOG / DEFAULT CONFIG
 # ============================================================
 CATALOG = {
-    "chatgpt_shared_5": {
-        "name": "ChatGPT chung 5",
-        "platform": "ChatGPT",
-        "type": "shared",
-        "duration_days": 30,
-        "price": 69000,
-    },
-    "chatgpt_shared_3": {
-        "name": "ChatGPT chung 3",
-        "platform": "ChatGPT",
-        "type": "shared",
-        "duration_days": 30,
-        "price": 119000,
-    },
-    "chatgpt_shared_2": {
-        "name": "ChatGPT chung 2",
-        "platform": "ChatGPT",
-        "type": "shared",
-        "duration_days": 30,
-        "price": 149000,
-    },
-    "chatgpt_private": {
-        "name": "ChatGPT cấp riêng",
-        "platform": "ChatGPT",
+    "veo3_ultra_25k_24h": {
+        "name": "Veo3 ultra 25k crd_BH 24h",
+        "platform": "Veo3",
         "type": "private",
-        "duration_days": 30,
-        "price": 249000,
+        "duration_days": 1,
+        "price": 29000,
+        "display_stock": 11,
     },
-    "grok_shared": {
-        "name": "Grok chung",
-        "platform": "Grok",
-        "type": "shared",
-        "duration_days": 30,
-        "price": 69000,
-    },
-    "grok_private": {
-        "name": "Grok cấp riêng",
-        "platform": "Grok",
-        "type": "private",
-        "duration_days": 30,
-        "price": 299000,
-    },
-    "gemini_shared": {
-        "name": "Gemini chung",
-        "platform": "Gemini",
-        "type": "shared",
-        "duration_days": 30,
-        "price": 59000,
-    },
-    "gemini_private": {
-        "name": "Gemini cấp riêng",
-        "platform": "Gemini",
+    "veo3_ultra_bh_304": {
+        "name": "Veo3 ultra_BH tới 30/4",
+        "platform": "Veo3",
         "type": "private",
         "duration_days": 30,
         "price": 199000,
+        "display_stock": 5,
     },
-    "capcut_shared": {
-        "name": "CapCut chung",
+    "gemini_pro_5tb_1year": {
+        "name": "Gemini Pro 5TB 1 year_KBH",
+        "platform": "Gemini",
+        "type": "private",
+        "duration_days": 365,
+        "price": 59000,
+        "display_stock": 1,
+    },
+    "capcut_team_35d": {
+        "name": "CapCut Team 35d_BHF",
         "platform": "CapCut",
-        "type": "shared",
+        "type": "private",
+        "duration_days": 35,
+        "price": 12000,
+        "display_stock": 0,
+    },
+    "express_vpn_30d": {
+        "name": "EXPRESS VPN 30 ngày_BHF",
+        "platform": "VPN",
+        "type": "private",
         "duration_days": 30,
-        "price": 49000,
+        "price": 17000,
+        "display_stock": 1,
+    },
+    "slot_gg_ultra_0_credit": {
+        "name": "Slot GG Ultra 0 credit_BHF",
+        "platform": "Google",
+        "type": "private",
+        "duration_days": 30,
+        "price": 285000,
+        "display_stock": 9,
+    },
+    "cdk_gpt_plus_1m": {
+        "name": "CDK GPT plus 1 tháng",
+        "platform": "ChatGPT",
+        "type": "private",
+        "duration_days": 30,
+        "price": 33000,
+        "display_stock": 388,
+    },
+    "cdk_gpt_pro_1m": {
+        "name": "CDK GPT Pro 1 tháng_BHF",
+        "platform": "ChatGPT",
+        "type": "private",
+        "duration_days": 30,
+        "price": 2300000,
+        "display_stock": 3,
     },
 }
 
-PLATFORM_TREE = {
-    "ChatGPT": ["chatgpt_shared_5", "chatgpt_shared_3", "chatgpt_shared_2", "chatgpt_private"],
-    "Gemini": ["gemini_shared", "gemini_private"],
-    "Grok": ["grok_shared", "grok_private"],
-    "CapCut": ["capcut_shared"],
-}
+PRODUCT_ORDER = [
+    "veo3_ultra_25k_24h",
+    "veo3_ultra_bh_304",
+    "gemini_pro_5tb_1year",
+    "capcut_team_35d",
+    "express_vpn_30d",
+    "slot_gg_ultra_0_credit",
+    "cdk_gpt_plus_1m",
+    "cdk_gpt_pro_1m",
+]
 
 TERM_OPTIONS = [1, 3, 6, 12]
 TERM_DISCOUNTS = {
@@ -721,7 +726,9 @@ def is_in_stock(product_code: str) -> bool:
 
 def stock_label(product_code: str) -> str:
     count = get_stock_count(product_code)
-    return f"{count}📦️" if count > 0 else "Hết hàng"
+    if count <= 0:
+        count = int(CATALOG.get(product_code, {}).get("display_stock", 0) or 0)
+    return f"📦 {count}" if count > 0 else "📦 0"
 
 
 def get_customers() -> Dict[str, Any]:
@@ -963,11 +970,7 @@ def get_term_discount(months: int) -> float:
 
 
 def get_product_base_price(product_code: str, months: int = 1) -> int:
-    base_price = int(CATALOG[product_code]["price"])
-    subtotal = base_price * months
-    discount = get_term_discount(months)
-    final_price = int(round(subtotal * (1 - discount)))
-    return max(final_price, 0)
+    return int(CATALOG[product_code]["price"])
 
 
 def get_product_price(product_code: str, months: int = 1, coupon_code: str = "", user_id: Optional[int] = None) -> int:
@@ -985,6 +988,19 @@ def get_duration_days_for_months(months: int) -> int:
 
 def term_label(months: int) -> str:
     return f"{months} tháng"
+
+
+def quantity_label(quantity: int) -> str:
+    quantity = max(1, int(quantity or 1))
+    return f"{quantity} sản phẩm" if quantity > 1 else "1 sản phẩm"
+
+
+def parse_positive_quantity(raw: str) -> Optional[int]:
+    try:
+        value = int(str(raw).strip())
+        return value if value > 0 else None
+    except Exception:
+        return None
 
 
 def customer_active_items(user_id: int) -> List[Dict[str, Any]]:
@@ -1204,7 +1220,7 @@ def process_expiry_reminders() -> Dict[str, Any]:
 def main_menu_keyboard():
     return {
         "inline_keyboard": [
-            [{"text": "🛒 Mua tài khoản", "callback_data": "menu_buy"}],
+            [{"text": "🛍 Sản phẩm", "callback_data": "menu_buy"}],
             [{"text": "🎁 TK Free", "callback_data": "menu_free"}],
             [{"text": "🔐 Lấy mã 2FA", "callback_data": "menu_2fa"}],
             [{"text": "📦 Tài khoản của tôi", "callback_data": "menu_my"}],
@@ -1229,47 +1245,32 @@ def free_back_keyboard():
     return {"inline_keyboard": [[{"text": "⬅️ Về TK Free", "callback_data": "menu_free"}]]}
 
 
-def platform_menu_keyboard():
+def product_menu_keyboard():
     rows = []
-    for platform in ["ChatGPT", "Gemini", "Grok", "CapCut"]:
-        rows.append([{"text": f"{platform}", "callback_data": f"platform|{platform}"}])
+    for code in PRODUCT_ORDER:
+        item = CATALOG[code]
+        rows.append([{
+            "text": f"🛍 {item['name']} | {format_money(item['price'])} | {stock_label(code)}",
+            "callback_data": f"buy|{code}",
+        }])
+    rows.append([{"text": "🔄 Cập nhật sản phẩm", "callback_data": "menu_buy"}])
     rows.append([{"text": "⬅️ Về menu", "callback_data": "home"}])
     return {"inline_keyboard": rows}
 
 
-def product_menu_keyboard(platform: str):
-    rows = []
-    for code in PLATFORM_TREE.get(platform, []):
-        item = CATALOG[code]
-        rows.append([{
-            "text": f"{item['name']} - từ {format_money(get_product_price(code, 1))}/tháng | {stock_label(code)}",
-            "callback_data": f"buy|{code}",
-        }])
-    rows.append([{"text": "⬅️ Chọn nền tảng khác", "callback_data": "menu_buy"}])
-    return {"inline_keyboard": rows}
-
-
-def term_menu_keyboard(product_code: str):
-    rows = []
-    stock = stock_label(product_code)
-    for months in TERM_OPTIONS:
-        total_price = get_product_price(product_code, months)
-        label = f"{term_label(months)} | {format_money(total_price)} | {stock}"
-        rows.append([{
-            "text": label,
-            "callback_data": f"term|{product_code}|{months}",
-        }])
-    rows.append([{"text": "⬅️ Quay lại sản phẩm", "callback_data": f"platform|{CATALOG[product_code]['platform']}"}])
-    return {"inline_keyboard": rows}
-
-
-def confirm_buy_keyboard(product_code: str, months: int, has_coupon: bool = False):
+def quantity_menu_keyboard(product_code: str, quantity: int = 1, has_coupon: bool = False):
     coupon_label = "🎟 Đổi mã giảm giá khác" if has_coupon else "🎟 Nhập mã giảm giá"
     return {
         "inline_keyboard": [
-            [{"text": coupon_label, "callback_data": f"coupon_input|{product_code}|{months}"}],
-            [{"text": "💳 Thanh toán", "callback_data": f"pay|{product_code}|{months}"}],
-            [{"text": "⬅️ Chọn thời hạn khác", "callback_data": f"buy|{product_code}"}],
+            [
+                {"text": "1", "callback_data": f"qty|{product_code}|1"},
+                {"text": "2", "callback_data": f"qty|{product_code}|2"},
+                {"text": "3", "callback_data": f"qty|{product_code}|3"},
+                {"text": "Số khác", "callback_data": f"qty_custom|{product_code}"},
+            ],
+            [{"text": coupon_label, "callback_data": f"coupon_input|{product_code}|{quantity}"}],
+            [{"text": f"💳 Thanh toán {quantity_label(quantity)}", "callback_data": f"pay|{product_code}|{quantity}"}],
+            [{"text": "⬅️ Quay lại danh sách sản phẩm", "callback_data": "menu_buy"}],
         ]
     }
 
@@ -1380,10 +1381,10 @@ def home_text() -> str:
     )
 
 
-def product_detail_text(product_code: str, months: int = 1, coupon_code: str = "", user_id: Optional[int] = None) -> str:
+def product_detail_text(product_code: str, quantity: int = 1, coupon_code: str = "", user_id: Optional[int] = None) -> str:
     item = CATALOG[product_code]
-    type_vi = "Tài khoản dùng chung" if item["type"] == "shared" else "Tài khoản cấp riêng"
-    subtotal = get_product_base_price(product_code, months)
+    unit_price = int(item["price"])
+    subtotal = unit_price * max(1, int(quantity or 1))
     total_price = subtotal
     coupon_text = "Chưa áp dụng"
     if coupon_code and user_id is not None:
@@ -1393,20 +1394,18 @@ def product_detail_text(product_code: str, months: int = 1, coupon_code: str = "
             coupon_text = f"{coupon_result['coupon_code']} (-{format_money(coupon_result['discount_amount'])})"
         else:
             coupon_text = f"{normalize_coupon_code(coupon_code)} (không hợp lệ)"
-    duration_days = get_duration_days_for_months(months)
     lines = [
-        f"📦 {item['name']}",
+        f"🛍 {item['name']}",
         "",
-        f"Nền tảng: {item['platform']}",
-        f"Loại: {type_vi}",
-        f"Thời hạn đang chọn: {term_label(months)} ({duration_days} ngày)",
-        f"Giá gốc theo kỳ hạn: {format_money(subtotal)}",
+        f"Giá lẻ: {format_money(unit_price)} / sản phẩm",
+        f"Số lượng đang chọn: {max(1, int(quantity or 1))}",
+        f"Tạm tính: {format_money(subtotal)}",
         f"Mã giảm giá: {coupon_text}",
-        f"Giá thanh toán: {format_money(total_price)}",
-        f"Kho hiện tại: {stock_label(product_code)}",
+        f"Tổng thanh toán: {format_money(total_price)}",
+        f"Tồn hiển thị: {stock_label(product_code)}",
         "",
-        "Sau khi thanh toán và được xác nhận, bot sẽ cấp tài khoản hoặc ghi nhận để admin cấp riêng.",
-        "Mã 2FA chỉ lấy được khi gói còn hạn.",
+        "Chọn số lượng bên dưới rồi bấm thanh toán.",
+        "Sau khi khách chọn số lượng xong, bot sẽ nhả QR riêng cho đúng đơn hàng.",
     ]
     return "\n".join(lines)
 
@@ -1484,11 +1483,13 @@ def free_gift_confirm_keyboard(gift_code: str):
 # ORDER PROCESSING
 # ============================================================
 def create_pending_order(user_id: int, chat_id: int, username: str, full_name: str,
-                         product_code: str, months: int = 1, coupon_code: str = "",
+                         product_code: str, months: int = 1, quantity: int = 1, coupon_code: str = "",
                          order_type: str = "new", renew_item_index: Optional[int] = None) -> Dict[str, Any]:
     orders = get_pending_orders()
     order_code = make_payment_code(product_code, user_id)
-    base_price = get_product_base_price(product_code, months)
+    quantity = max(1, int(quantity or 1))
+    unit_price = get_product_base_price(product_code, months)
+    base_price = unit_price * quantity
     coupon_result = None
     final_price = base_price
     clean_coupon = normalize_coupon_code(coupon_code)
@@ -1498,7 +1499,7 @@ def create_pending_order(user_id: int, chat_id: int, username: str, full_name: s
             final_price = int(coupon_result["final_price"])
         else:
             clean_coupon = ""
-    duration_days = get_duration_days_for_months(months)
+    duration_days = int(CATALOG[product_code].get("duration_days", 30) or 30)
     payos = create_payos_payment_link(final_price, order_code, CATALOG[product_code]["name"])
     orders[order_code] = {
         "order_code": order_code,
@@ -1509,12 +1510,14 @@ def create_pending_order(user_id: int, chat_id: int, username: str, full_name: s
         "full_name": full_name,
         "product_code": product_code,
         "months": months,
+        "quantity": quantity,
         "price": final_price,
+        "unit_price": unit_price,
         "base_price": base_price,
         "coupon_code": clean_coupon,
         "coupon_discount": int(coupon_result["discount_amount"]) if coupon_result and coupon_result.get("ok") else 0,
         "base_monthly_price": int(CATALOG[product_code]["price"]),
-        "discount_percent": int(get_term_discount(months) * 100),
+        "discount_percent": 0,
         "duration_days": duration_days,
         "status": "waiting_payment",
         "delivery_status": "pending",
@@ -1658,39 +1661,28 @@ def finalize_order(order_code: str, delivered_by: str = "system") -> Dict[str, A
         tg_send_message(order["chat_id"], message)
         return all_orders[order_code]
 
-    if item["type"] == "shared":
-        account_data = allocate_inventory_account(product_code)
-        if account_data:
-            message = (
-                "✅ Thanh toán đã được xác nhận.\n\n"
-                f"Tài khoản: {account_data.get('username', '')}\n"
-                f"Mật khẩu: {account_data.get('password', '')}\n"
-            )
-            if account_data.get("note"):
-                message += f"Ghi chú: {account_data['note']}\n"
-            if account_data.get("username"):
-                message += "\nBạn có thể vào mục 🔐 Lấy mã 2FA hoặc dùng lệnh /2fa khi cần."
-        else:
-            message = (
-                "✅ Thanh toán đã được xác nhận.\n"
-                "Hiện kho tài khoản dùng chung đang tạm hết, admin sẽ cấp thủ công sớm nhất."
-            )
-    else:
-        message = (
-            "✅ Thanh toán đã được xác nhận.\n"
-            "Admin sẽ cấp tài khoản riêng cho bạn. Sau khi cấp xong, bot vẫn quản lý hạn dùng và 2FA bình thường."
-        )
+    quantity = max(1, int(order.get("quantity", 1) or 1))
+    delivered_accounts = []
+    for _ in range(quantity):
+        delivered_accounts.append({})
 
-    add_customer_product(
-        user_id=order["user_id"],
-        username=order.get("username", ""),
-        full_name=order.get("full_name", ""),
-        product_code=product_code,
-        account_data=account_data,
-        duration_days=int(order["duration_days"]),
-        order_code=order_code,
-        delivered_by=delivered_by,
+    message = (
+        "✅ Thanh toán đã được xác nhận.\n"
+        "Đơn hàng của bạn đã ghi nhận thành công.\n"
+        "Admin sẽ xử lý/cấp sản phẩm theo số lượng bạn đã chọn."
     )
+
+    for acc in delivered_accounts:
+        add_customer_product(
+            user_id=order["user_id"],
+            username=order.get("username", ""),
+            full_name=order.get("full_name", ""),
+            product_code=product_code,
+            account_data=acc,
+            duration_days=int(order["duration_days"]),
+            order_code=order_code,
+            delivered_by=delivered_by,
+        )
 
     all_orders = get_orders()
     all_orders[order_code] = {
@@ -1698,7 +1690,7 @@ def finalize_order(order_code: str, delivered_by: str = "system") -> Dict[str, A
         "status": "paid",
         "paid_at": now_ts(),
         "delivered_by": delivered_by,
-        "account_data": account_data,
+        "account_data": delivered_accounts[0] if delivered_accounts else {},
         "fulfilled_mode": "new",
         "delivery_status": "delivered",
     }
@@ -2023,7 +2015,7 @@ def handle_callback(cq: Dict[str, Any]):
         open_home(chat_id, message_id)
         return
     if data == "menu_buy":
-        tg_edit_message(chat_id, message_id, "🛒 Chọn nền tảng cần mua:", reply_markup=platform_menu_keyboard())
+        tg_edit_message(chat_id, message_id, "🛍 Chào bạn! Vui lòng chọn sản phẩm:", reply_markup=product_menu_keyboard())
         return
     if data == "menu_free":
         tg_edit_message(chat_id, message_id, free_menu_text(user_id), reply_markup=free_menu_keyboard())
@@ -2159,10 +2151,6 @@ def handle_callback(cq: Dict[str, Any]):
         tg_edit_message(chat_id, message_id,
                         "🔐 Chọn tài khoản còn hạn để lấy mã 2FA.\nKhách hết hạn sẽ không lấy được mã.",
                         reply_markup=active_2fa_keyboard(user_id))
-        return
-    if data.startswith("platform|"):
-        platform = data.split("|", 1)[1]
-        tg_edit_message(chat_id, message_id, f"🛒 {platform} - chọn gói:", reply_markup=product_menu_keyboard(platform))
         return
     if data.startswith("buy|"):
         code = data.split("|", 1)[1]
